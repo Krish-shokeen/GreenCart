@@ -1,0 +1,20 @@
+{
+  "name": "node-js-project",
+  "version": "1.0.0",
+  "description": "node js project GreenCart – Local Sustainable Marketplace",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.19.3",
+    "nodemon": "^3.1.10"
+  }
+}
