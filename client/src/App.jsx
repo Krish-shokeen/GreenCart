@@ -1,36 +1,60 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  NavLink,
+  NavLink
 } from "react-router-dom";
+
 import "./App.css";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check token on initial load
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("token"));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+    window.location.href = "/";
+  };
+
   return (
     <Router>
       <div className="app-container">
+
         {/* Navbar */}
         <nav className="navbar slide-down">
           <h1 className="logo">🌿 GreenCart</h1>
+
           <div className="nav-links">
-            <NavLink to="/" end>
-              Home
-            </NavLink>
+            <NavLink to="/" end>Home</NavLink>
             <NavLink to="/shop">Shop</NavLink>
             <NavLink to="/about">About</NavLink>
             <NavLink to="/contact">Contact</NavLink>
-            <NavLink to="/login">
-              <button className="login-btn">Login</button>
-            </NavLink>
+
+            {isLoggedIn ? (
+              <button onClick={handleLogout} className="login-btn">
+                Logout
+              </button>
+            ) : (
+              <NavLink to="/login">
+                <button className="login-btn">Login</button>
+              </NavLink>
+            )}
           </div>
         </nav>
 
-        {/* Routes */}
+        {/* ROUTES */}
         <Routes>
+          {/* HOME PAGE */}
           <Route
             path="/"
             element={
@@ -47,14 +71,20 @@ export default function App() {
               </header>
             }
           />
-          <Route path="/login" element={<Login />} />
+
+          {/* Auth pages with callback */}
+          <Route path="/login" element={<Login onLogin={() => setIsLoggedIn(true)} />} />
           <Route path="/signup" element={<Signup />} />
+
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
 
-        {/* Footer */}
+        {/* FOOTER */}
         <footer className="footer fade-up">
           <p>© 2025 GreenCart | Built with ❤️ for a greener tomorrow</p>
         </footer>
+
       </div>
     </Router>
   );
