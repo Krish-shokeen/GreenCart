@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 // -------- Signup --------
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     // Check if email already exists
     const exists = await User.findOne({ email });
@@ -21,11 +21,19 @@ exports.signup = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role: role || "buyer",
     });
 
     return res.status(201).json({
       message: "Signup successful",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role,
+        profilePic: user.profilePic,
+        bio: user.bio
+      },
     });
   } catch (err) {
     return res.status(500).json({ message: "Server error" });
@@ -59,11 +67,51 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       token,
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic,
+        bio: user.bio,
+        location: user.location
+      }
     });
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);   // <--- ADD THIS FOR DEBUGGING
     return res.status(500).json({ message: "Server error" });
   }
+};
+
+// UPDATE PROFILE
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id; // from JWT middleware
+
+        const { name, bio, profilePic, location } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { name, bio, profilePic, location },
+            { new: true }
+        ).select('-password');
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                profilePic: updatedUser.profilePic,
+                bio: updatedUser.bio,
+                location: updatedUser.location
+            }
+        });
+
+    } catch (err) {
+        console.error("UPDATE PROFILE ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
 };

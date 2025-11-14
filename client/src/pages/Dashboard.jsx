@@ -1,12 +1,117 @@
-import React from "react";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const [name, setName] = useState(savedUser.name || "");
+  const [bio, setBio] = useState(savedUser.bio || "");
+  const [location, setLocation] = useState(savedUser.location || "");
+  const [profilePic, setProfilePic] = useState(savedUser.profilePic);
+
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // 🟦 Upload File to Cloudinary via Backend
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("profilePic", file);
+
+    try {
+      const res = await axios.post(
+        "http://localhost:6969/api/auth/upload-profile-pic",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setProfilePic(res.data.url); // Set uploaded image URL
+      setUploading(false);
+    } catch (err) {
+      console.log(err);
+      setUploading(false);
+      alert("Image upload failed");
+    }
+  };
+
+  // 🟦 Save Updated Profile
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await axios.put(
+        "http://localhost:6969/api/auth/update-profile",
+        {
+          name,
+          bio,
+          location,
+          profilePic
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      // Update localStorage
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      
+      setSaving(false);
+      setMessage("Profile updated successfully!");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      setSaving(false);
+      alert("Failed to update profile");
+    }
+  };
+
 
   return (
-    <div style={{ padding: "50px", textAlign: "center" }}>
-      <h1>Welcome, {user?.name} 🌿</h1>
-      <p>You are now logged into GreenCart.</p>
+    <div className="profile-container">
+      <div className="profile-card">
+        <h2>Your Profile</h2>
+
+        <img src={profilePic} className="big-profile-pic" alt="Profile" />
+
+        <label>Upload New Picture:</label>
+        <input type="file" accept="image/*" onChange={handleFileUpload} />
+
+        {uploading && <p className="uploading-msg">Uploading...</p>}
+
+        <label>Name:</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <label>Bio:</label>
+        <textarea
+          rows="4"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+        />
+
+        <label>Location:</label>
+        <input
+          type="text"
+          placeholder="e.g. New York, USA"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+
+        <button className="save-btn" onClick={handleSave}>
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+
+        {message && <p className="success-msg">{message}</p>}
+      </div>
     </div>
   );
 }

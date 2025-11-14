@@ -27,10 +27,9 @@ export default function Login({ onLogin }) {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Tell App.jsx that login is successful
       if (onLogin) onLogin();
 
-      setTimeout(() => navigate("/dashboard"), 1000);
+      setTimeout(() => navigate("/"), 1000);
 
     } catch (err) {
       setLoading(false);
@@ -41,32 +40,31 @@ export default function Login({ onLogin }) {
   return (
     <div className="auth-container fade-in">
       <h2 className="auth-title">Welcome Back 🌿</h2>
+
       <form className="auth-form" onSubmit={handleSubmit}>
-        
-        <input 
-          type="email" 
-          placeholder="Email" 
+        <input
+          type="email"
+          placeholder="Email"
+          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required 
         />
 
-        <input 
-          type="password" 
+        <input
+          type="password"
           placeholder="Password"
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
         <button type="submit" className={`auth-btn ${loading ? "loading" : ""}`}>
           {loading ? "Loading..." : success ? "Success!" : "Login"}
         </button>
-
       </form>
 
       <p className="auth-footer">
-        Don't have an account? <NavLink to="/signup">Sign up</NavLink>
+        Don’t have an account? <NavLink to="/signup">Sign up</NavLink>
       </p>
     </div>
   );
