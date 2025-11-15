@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function OrderDetail() {
   const { id } = useParams();
@@ -20,7 +21,7 @@ export default function OrderDetail() {
 
   const fetchOrder = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/orders/${id}`, {
+      const res = await axios.get(`${API_URL}/api/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrder(res.data.order);
@@ -51,7 +52,7 @@ export default function OrderDetail() {
     setCancelling(true);
     try {
       const res = await axios.put(
-        `http://localhost:6969/api/orders/${id}/cancel`,
+        `${API_URL}/api/orders/${id}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

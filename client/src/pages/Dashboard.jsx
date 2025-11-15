@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API_URL from "../config/api";
+
 export default function Dashboard() {
   const savedUser = JSON.parse(localStorage.getItem("user")) || {};
 
@@ -24,7 +26,7 @@ export default function Dashboard() {
 
     try {
       const res = await axios.post(
-        "http://localhost:6969/api/auth/upload-profile-pic",
+        `${API_URL}/api/auth/upload-profile-pic`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -45,7 +47,7 @@ export default function Dashboard() {
     setSaving(true);
     try {
       const res = await axios.put(
-        "http://localhost:6969/api/auth/update-profile",
+        `${API_URL}/api/auth/update-profile`,
         {
           name,
           bio,

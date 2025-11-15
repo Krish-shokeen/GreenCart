@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:6969/api/orders", {
+      const res = await axios.get(`${API_URL}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders(res.data.orders);

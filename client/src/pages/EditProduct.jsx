@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ export default function EditProduct() {
 
   const fetchProduct = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/products/${id}`);
+      const res = await axios.get(`${API_URL}/api/products/${id}`);
       const product = res.data.product;
       
       setName(product.name);
@@ -63,7 +64,7 @@ export default function EditProduct() {
       });
 
       const res = await axios.post(
-        "http://localhost:6969/api/auth/upload-images",
+        `${API_URL}/api/auth/upload-images`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -89,7 +90,7 @@ export default function EditProduct() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:6969/api/products/${id}`,
+        `${API_URL}/api/products/${id}`,
         {
           name,
           description,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../config/api";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function ProductDetail() {
 
   const fetchProduct = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/products/${id}`);
+      const res = await axios.get(`${API_URL}/api/products/${id}`);
       setProduct(res.data.product);
       setLoading(false);
     } catch (err) {
@@ -34,7 +35,7 @@ export default function ProductDetail() {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/reviews/${id}`);
+      const res = await axios.get(`${API_URL}/api/reviews/${id}`);
       setReviews(res.data.reviews);
     } catch (err) {
       console.error(err);
@@ -51,7 +52,7 @@ export default function ProductDetail() {
     setAddingToCart(true);
     try {
       await axios.post(
-        "http://localhost:6969/api/cart/add",
+        `${API_URL}/api/cart/add`,
         { productId: id, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -73,7 +74,7 @@ export default function ProductDetail() {
 
     try {
       await axios.post(
-        "http://localhost:6969/api/reviews",
+        `${API_URL}/api/reviews`,
         { productId: id, rating, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );

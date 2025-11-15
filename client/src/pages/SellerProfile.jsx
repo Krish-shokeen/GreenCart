@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../config/api";
 
 export default function SellerProfile() {
   const { sellerId } = useParams();
@@ -14,7 +15,7 @@ export default function SellerProfile() {
 
   const fetchSellerProducts = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/products/seller/${sellerId}`);
+      const res = await axios.get(`${API_URL}/api/products/seller/${sellerId}`);
       setProducts(res.data.products);
       setLoading(false);
     } catch (err) {

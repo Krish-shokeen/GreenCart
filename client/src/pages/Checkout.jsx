@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function Checkout() {
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get("http://localhost:6969/api/cart", {
+      const res = await axios.get(`${API_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCart(res.data.cart);

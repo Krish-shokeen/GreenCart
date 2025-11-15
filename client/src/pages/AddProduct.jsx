@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function AddProduct() {
       });
 
       const res = await axios.post(
-        "http://localhost:6969/api/auth/upload-images",
+        `${API_URL}/api/auth/upload-images`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -59,7 +60,7 @@ export default function AddProduct() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:6969/api/products",
+        `${API_URL}/api/products`,
         {
           name,
           description,

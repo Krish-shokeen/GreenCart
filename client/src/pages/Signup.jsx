@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../config/api";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:6969/api/auth/signup", {
+      await axios.post(`${API_URL}/api/auth/signup`, {
         name,
         email,
         password,

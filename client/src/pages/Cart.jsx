@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function Cart() {
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get("http://localhost:6969/api/cart", {
+      const res = await axios.get(`${API_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCart(res.data.cart);
@@ -34,7 +35,7 @@ export default function Cart() {
 
     try {
       const res = await axios.put(
-        "http://localhost:6969/api/cart/update",
+        `${API_URL}/api/cart/update`,
         { productId, quantity: newQuantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -47,7 +48,7 @@ export default function Cart() {
   const removeItem = async (productId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:6969/api/cart/remove/${productId}`,
+        `${API_URL}/api/cart/remove/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCart(res.data.cart);
@@ -60,7 +61,7 @@ export default function Cart() {
     if (!window.confirm("Clear all items from cart?")) return;
 
     try {
-      const res = await axios.delete("http://localhost:6969/api/cart/clear", {
+      const res = await axios.delete(`${API_URL}/api/cart/clear`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCart(res.data.cart);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function MyProducts() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function MyProducts() {
 
   const fetchMyProducts = async () => {
     try {
-      const res = await axios.get(`http://localhost:6969/api/products/seller/${user.id}`);
+      const res = await axios.get(`${API_URL}/api/products/seller/${user.id}`);
       setProducts(res.data.products);
       setLoading(false);
     } catch (err) {
@@ -28,7 +29,7 @@ export default function MyProducts() {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await axios.delete(`http://localhost:6969/api/products/${productId}`, {
+      await axios.delete(`${API_URL}/api/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Product deleted!");

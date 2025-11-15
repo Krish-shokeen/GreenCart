@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config/api";
 
 export default function Shop() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Shop() {
       if (search) params.search = search;
       if (selectedTags.length > 0) params.tags = selectedTags.join(",");
 
-      const res = await axios.get("http://localhost:6969/api/products", { params });
+      const res = await axios.get(`${API_URL}/api/products`, { params });
       setProducts(res.data.products);
       setLoading(false);
     } catch (err) {
