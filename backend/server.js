@@ -37,7 +37,11 @@ app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'GreenCart API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    cors: {
+      allowedOrigins: allowedOrigins,
+      frontendUrl: process.env.FRONTEND_URL || 'not set'
+    }
   });
 });
 
