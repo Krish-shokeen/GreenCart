@@ -26,6 +26,7 @@ import OrderDetail from "./pages/OrderDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
+import Toast from "./components/Toast";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -130,6 +131,9 @@ export default function App() {
         <footer className="footer fade-up">
           <p>© 2025 GreenCart | Built with ❤️ for a greener tomorrow</p>
         </footer>
+
+        {/* Toast Notifications */}
+        <Toast />
       </div>
     </Router>
   );

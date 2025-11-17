@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_URL from "../config/api";
+import { useToast } from "../components/Toast";
 
 export default function ProductDetail() {
+  const showToast = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -44,8 +46,8 @@ export default function ProductDetail() {
 
   const handleAddToCart = async () => {
     if (!token) {
-      alert("Please login to add items to cart");
-      navigate("/login");
+      showToast("Please login to add items to cart", "warning");
+      setTimeout(() => navigate("/login"), 1000);
       return;
     }
 
@@ -57,10 +59,10 @@ export default function ProductDetail() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Added to cart!");
+      showToast("✓ Added to cart successfully!", "success");
       setAddingToCart(false);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add to cart");
+      showToast(err.response?.data?.message || "Failed to add to cart", "error");
       setAddingToCart(false);
     }
   };
@@ -68,7 +70,7 @@ export default function ProductDetail() {
   const handleAddReview = async (e) => {
     e.preventDefault();
     if (!token) {
-      alert("Please login to add a review");
+      showToast("Please login to add a review", "warning");
       return;
     }
 
@@ -79,13 +81,13 @@ export default function ProductDetail() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Review added!");
+      showToast("✓ Review added successfully!", "success");
       setComment("");
       setRating(5);
       fetchReviews();
       fetchProduct();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add review");
+      showToast(err.response?.data?.message || "Failed to add review", "error");
     }
   };
 
