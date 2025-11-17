@@ -25,6 +25,7 @@ import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Home from "./pages/Home";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -105,21 +106,7 @@ export default function App() {
 
         {/* ROUTES */}
         <Routes>
-          <Route
-            path="/"
-            element={
-              <header className="hero fade-in">
-                <h2 className="hero-title pop-in">
-                  Local. Sustainable. <span>Conscious Shopping.</span>
-                </h2>
-                <p className="hero-desc">
-                  Discover eco-friendly, handmade, and recycled products from
-                  local sellers in your city.
-                </p>
-                <button className="cta-btn pulse" onClick={() => window.location.href = '/shop'}>Explore Marketplace</button>
-              </header>
-            }
-          />
+          <Route path="/" element={<Home />} />
 
           <Route path="/login" element={<Login onLogin={() => setIsLoggedIn(true)} />} />
           <Route path="/signup" element={<Signup />} />
