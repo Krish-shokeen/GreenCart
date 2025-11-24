@@ -149,6 +149,51 @@ export default function SellerProfile() {
         </div>
       )}
 
+      {/* Customer Reviews Section */}
+      {reviews.length > 0 && (
+        <div className="seller-reviews-section">
+          <h2>Customer Reviews ({reviews.length})</h2>
+          <div className="reviews-grid">
+            {reviews.slice(0, 6).map(review => (
+              <div key={review._id} className="review-card">
+                <div className="review-header">
+                  <div className="review-user">
+                    <img 
+                      src={review.user?.profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} 
+                      alt={review.user?.name}
+                      className="review-user-pic"
+                    />
+                    <div>
+                      <div className="review-user-name">{review.user?.name}</div>
+                      <div className="review-date">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="review-rating">
+                    {"⭐".repeat(review.rating)}
+                  </div>
+                </div>
+                {review.verified && (
+                  <span className="verified-badge">✓ Verified Purchase</span>
+                )}
+                <p className="review-comment">{review.comment}</p>
+                {review.product && (
+                  <div className="review-product">
+                    <img 
+                      src={review.product.images?.[0] || "https://via.placeholder.com/50"} 
+                      alt={review.product.name}
+                      className="review-product-img"
+                    />
+                    <span className="review-product-name">{review.product.name}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Seller's Products */}
       <div className="seller-products-section">
         <h2>Products by {seller?.name}</h2>

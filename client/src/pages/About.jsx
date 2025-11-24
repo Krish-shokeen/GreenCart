@@ -1,4 +1,108 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import API_URL from "../config/api";
+
 export default function About() {
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [myFeedback, setMyFeedback] = useState(null);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [category, setCategory] = useState("general");
+  const [submitting, setSubmitting] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    fetchApprovedFeedback();
+    if (token) {
+      fetchMyFeedback();
+    }
+  }, []);
+
+  const fetchApprovedFeedback = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/feedback/approved`);
+      setFeedbacks(res.data.feedback);
+      setAverageRating(res.data.averageRating);
+      setTotalReviews(res.data.totalReviews);
+    } catch (err) {
+      console.error("Error fetching feedback:", err);
+    }
+  };
+
+  const fetchMyFeedback = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/feedback/my-feedback`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMyFeedback(res.data.feedback);
+      if (res.data.feedback) {
+        setRating(res.data.feedback.rating);
+        setComment(res.data.feedback.comment);
+        setCategory(res.data.feedback.category);
+      }
+    } catch (err) {
+      console.error("Error fetching my feedback:", err);
+    }
+  };
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    
+    if (!token) {
+      alert("Please login to submit feedback");
+      window.location.href = "/login";
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const endpoint = myFeedback ? "/api/feedback" : "/api/feedback";
+      const method = myFeedback ? "put" : "post";
+      
+      const res = await axios[method](
+        `${API_URL}${endpoint}`,
+        { rating, comment, category },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert(res.data.message);
+      setShowFeedbackForm(false);
+      fetchMyFeedback();
+      fetchApprovedFeedback();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit feedback");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteFeedback = async () => {
+    if (!confirm("Are you sure you want to delete your feedback?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/api/feedback`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Feedback deleted successfully");
+      setMyFeedback(null);
+      setRating(5);
+      setComment("");
+      setCategory("general");
+      fetchApprovedFeedback();
+    } catch (err) {
+      alert("Failed to delete feedback");
+    }
+  };
+
+  const renderStars = (rating) => {
+    return "⭐".repeat(Math.round(rating));
+  };
+
   return (
     <div className="about-container">
       <div className="about-hero">
@@ -122,6 +226,133 @@ export default function About() {
             <button className="cta-btn-secondary" onClick={() => window.location.href = '/signup'}>
               Become a Seller
             </button>
+          </div>
+        </section>
+
+        {/* Community Feedback Section */}
+        <section className="feedback-section">
+          <h2>Community Feedback</h2>
+          <div className="feedback-header">
+            <div className="overall-rating">
+              <div className="rating-number">{averageRating}</div>
+              <div className="rating-stars">{renderStars(averageRating)}</div>
+              <div className="rating-count">Based on {totalReviews} reviews</div>
+            </div>
+            
+            {token && (
+              <div className="feedback-actions">
+                {myFeedback ? (
+                  <>
+                    <button 
+                      className="btn-edit-feedback"
+                      onClick={() => setShowFeedbackForm(!showFeedbackForm)}
+                    >
+                      {showFeedbackForm ? "Cancel" : "Edit Your Review"}
+                    </button>
+                    <button 
+                      className="btn-delete-feedback"
+                      onClick={handleDeleteFeedback}
+                    >
+                      Delete
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    className="btn-add-feedback"
+                    onClick={() => setShowFeedbackForm(!showFeedbackForm)}
+                  >
+                    {showFeedbackForm ? "Cancel" : "Write a Review"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Feedback Form */}
+          {showFeedbackForm && (
+            <div className="feedback-form-container">
+              <form onSubmit={handleSubmitFeedback} className="feedback-form">
+                <h3>{myFeedback ? "Update Your Review" : "Share Your Experience"}</h3>
+                
+                <div className="form-group">
+                  <label>Rating</label>
+                  <div className="star-rating-input">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`star ${rating >= star ? "active" : ""}`}
+                        onClick={() => setRating(star)}
+                      >
+                        ⭐
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Category</label>
+                  <select 
+                    value={category} 
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="feedback-category"
+                  >
+                    <option value="general">General</option>
+                    <option value="user_experience">User Experience</option>
+                    <option value="product_quality">Product Quality</option>
+                    <option value="customer_service">Customer Service</option>
+                    <option value="sustainability">Sustainability</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Your Review</label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Share your thoughts about GreenCart..."
+                    required
+                    rows="5"
+                    className="feedback-textarea"
+                  />
+                </div>
+
+                <button type="submit" className="btn-submit-feedback" disabled={submitting}>
+                  {submitting ? "Submitting..." : myFeedback ? "Update Review" : "Submit Review"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Display Feedbacks */}
+          <div className="feedbacks-list">
+            {feedbacks.length === 0 ? (
+              <p className="no-feedback">No reviews yet. Be the first to share your experience!</p>
+            ) : (
+              feedbacks.map((feedback) => (
+                <div key={feedback._id} className="feedback-card">
+                  <div className="feedback-header-card">
+                    <div className="feedback-user">
+                      <img 
+                        src={feedback.user?.profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} 
+                        alt={feedback.user?.name}
+                        className="feedback-user-pic"
+                      />
+                      <div>
+                        <div className="feedback-user-name">{feedback.user?.name}</div>
+                        <div className="feedback-date">
+                          {new Date(feedback.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="feedback-rating-display">
+                      {renderStars(feedback.rating)}
+                    </div>
+                  </div>
+                  <div className="feedback-category-badge">{feedback.category.replace("_", " ")}</div>
+                  <p className="feedback-comment">{feedback.comment}</p>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>
