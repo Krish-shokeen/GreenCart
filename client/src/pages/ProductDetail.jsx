@@ -115,13 +115,18 @@ export default function ProductDetail() {
 
           <p className="description">{product.description}</p>
 
-          <div className="seller-info">
+          <div 
+            className="seller-info clickable" 
+            onClick={() => navigate(`/seller/${product.seller._id}`)}
+            title="View seller profile"
+          >
             <img src={product.seller.profilePic} alt="seller" className="seller-avatar" />
             <div>
               <p><strong>{product.seller.name}</strong></p>
               <p>{product.seller.location}</p>
               <p>⭐ {product.seller.rating.toFixed(1)}</p>
             </div>
+            <span className="view-profile-arrow">→</span>
           </div>
 
           <div className="quantity-selector">

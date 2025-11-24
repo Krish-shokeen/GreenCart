@@ -27,6 +27,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Toast from "./components/Toast";
+import VerifyOTP from "./pages/VerifyOTP";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -111,6 +112,7 @@ export default function App() {
 
           <Route path="/login" element={<Login onLogin={() => setIsLoggedIn(true)} />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />

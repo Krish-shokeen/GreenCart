@@ -66,7 +66,7 @@ exports.getProducts = async (req, res) => {
 // Get Single Product
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate("seller", "name bio location rating profilePic");
+    const product = await Product.findById(req.params.id).populate("seller", "name bio location address phone rating totalRatings totalSales profilePic email memberSince createdAt");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -129,7 +129,7 @@ exports.deleteProduct = async (req, res) => {
 // Get Products by Seller
 exports.getSellerProducts = async (req, res) => {
   try {
-    const products = await Product.find({ seller: req.params.sellerId });
+    const products = await Product.find({ seller: req.params.sellerId }).populate("seller", "name bio location address phone rating totalRatings totalSales profilePic email memberSince createdAt");
     return res.status(200).json({ products });
   } catch (err) {
     console.error(err);

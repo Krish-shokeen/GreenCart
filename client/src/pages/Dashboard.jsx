@@ -8,6 +8,8 @@ export default function Dashboard() {
   const [name, setName] = useState(savedUser.name || "");
   const [bio, setBio] = useState(savedUser.bio || "");
   const [location, setLocation] = useState(savedUser.location || "");
+  const [address, setAddress] = useState(savedUser.address || "");
+  const [phone, setPhone] = useState(savedUser.phone || "");
   const [profilePic, setProfilePic] = useState(savedUser.profilePic);
 
   const [saving, setSaving] = useState(false);
@@ -52,6 +54,8 @@ export default function Dashboard() {
           name,
           bio,
           location,
+          address,
+          phone,
           profilePic
         },
         {
@@ -106,6 +110,22 @@ export default function Dashboard() {
           placeholder="e.g. New York, USA"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
+        />
+
+        <label>Address:</label>
+        <input
+          type="text"
+          placeholder="e.g. 123 Main St, Apt 4B"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+
+        <label>Phone:</label>
+        <input
+          type="tel"
+          placeholder="e.g. +1 234 567 8900"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
         />
 
         <button className="save-btn" onClick={handleSave}>

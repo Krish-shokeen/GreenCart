@@ -1,5 +1,5 @@
 const express = require("express");
-const { signup, login, updateProfile } = require("../controllers/authController");
+const { signup, login, updateProfile, verifyOTP, resendOTP, checkEmail, getUserProfile } = require("../controllers/authController");
 
 const router = express.Router();
 const upload = require("../multer");
@@ -45,8 +45,12 @@ router.post("/upload-images", upload.array("images", 5), async (req, res) => {
   }
 });
 
+router.get("/check-email", checkEmail);
+router.get("/user/:userId", getUserProfile);
 router.post("/signup", signup);
 router.post("/login", login);
+router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 router.put("/update-profile", authMiddleware, updateProfile);
 
 module.exports = router;

@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_URL from "../config/api";
+import { useToast } from "../components/Toast";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const showToast = useToast();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,7 +21,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await axios.post(`${API_URL}/api/auth/signup`, {
+      const res = await axios.post(`${API_URL}/api/auth/signup`, {
         name,
         email,
         password,
@@ -29,11 +31,18 @@ export default function Signup() {
       setLoading(false);
       setSuccess(true);
 
-      setTimeout(() => navigate("/login"), 1200);
+      showToast("✓ Verification code sent! Please check your email.", "success");
+
+      // Redirect to OTP verification page
+      setTimeout(() => {
+        navigate("/verify-otp", {
+          state: { email, name }
+        });
+      }, 1500);
 
     } catch (err) {
       setLoading(false);
-      alert(err.response?.data?.message || "Signup failed.");
+      showToast(err.response?.data?.message || "Signup failed", "error");
     }
   };
 
@@ -72,7 +81,7 @@ export default function Signup() {
         </select>
 
         <button type="submit" className={`auth-btn ${loading ? "loading" : ""}`}>
-          {loading ? "Loading..." : success ? "Account Created!" : "Sign Up"}
+          {loading ? "Sending..." : success ? "Code Sent!" : "Sign Up"}
         </button>
       </form>
 
