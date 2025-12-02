@@ -8,11 +8,13 @@ export default function SellerProfile() {
   const navigate = useNavigate();
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchSellerInfo();
     fetchSellerProducts();
+    fetchSellerReviews();
   }, [sellerId]);
 
   const fetchSellerInfo = async () => {
@@ -43,7 +45,35 @@ export default function SellerProfile() {
     }
   };
 
-  if (loading) return <div className="loading">Loading seller profile...</div>;
+  const fetchSellerReviews = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/reviews/seller/${sellerId}`);
+      setReviews(res.data.reviews);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading seller profile...</p>
+      </div>
+    );
+  }
+
+  if (!seller && products.length === 0) {
+    return (
+      <div className="error-container">
+        <h2>Seller Not Found</h2>
+        <p>The seller you're looking for doesn't exist or has been removed.</p>
+        <button onClick={() => navigate('/shop')} className="btn-back-shop">
+          Back to Shop
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="seller-profile-container">
