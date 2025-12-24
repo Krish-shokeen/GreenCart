@@ -28,6 +28,10 @@ import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Toast from "./components/Toast";
 import VerifyOTP from "./pages/VerifyOTP";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -201,11 +205,50 @@ export default function App() {
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
         </Routes>
 
         {/* Footer */}
         <footer className="footer fade-up">
-          <p>© 2025 GreenCart | Built with ❤️ for a greener tomorrow</p>
+          <div className="footer-content">
+            <div className="footer-section">
+              <h3>🌿 GreenCart</h3>
+              <p>Building a sustainable future, one purchase at a time.</p>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Quick Links</h4>
+              <div className="footer-links">
+                <NavLink to="/about">About Us</NavLink>
+                <NavLink to="/contact">Contact</NavLink>
+                <NavLink to="/shop">Shop</NavLink>
+              </div>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Policies</h4>
+              <div className="footer-links">
+                <NavLink to="/privacy-policy">Privacy Policy</NavLink>
+                <NavLink to="/terms-conditions">Terms & Conditions</NavLink>
+                <NavLink to="/shipping-policy">Shipping Policy</NavLink>
+                <NavLink to="/refund-policy">Refund Policy</NavLink>
+              </div>
+            </div>
+            
+            <div className="footer-section">
+              <h4>Contact Info</h4>
+              <p>📧 krishshokeen55@gmail.com</p>
+              <p>📞 +91 98731 23485</p>
+              <p>📍 New Delhi, India</p>
+            </div>
+          </div>
+          
+          <div className="footer-bottom">
+            <p>© 2025 GreenCart | Built with ❤️ for a greener tomorrow</p>
+          </div>
         </footer>
 
         {/* Toast Notifications */}
