@@ -118,10 +118,10 @@ export default function OrderDetail() {
               <div className="order-item-info">
                 <h3>{item.product?.name}</h3>
                 <p>Quantity: {item.quantity}</p>
-                <p className="item-price">${item.price.toFixed(2)} each</p>
+                <p className="item-price">₹{item.price.toFixed(2)} each</p>
               </div>
               <div className="order-item-total">
-                ${(item.price * item.quantity).toFixed(2)}
+                ₹{(item.price * item.quantity).toFixed(2)}
               </div>
             </div>
           ))}
@@ -150,7 +150,7 @@ export default function OrderDetail() {
             <h3>Order Summary</h3>
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${order.totalAmount.toFixed(2)}</span>
+              <span>₹{order.totalAmount.toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Shipping:</span>
@@ -158,7 +158,7 @@ export default function OrderDetail() {
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${order.totalAmount.toFixed(2)}</span>
+              <span>₹{order.totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>

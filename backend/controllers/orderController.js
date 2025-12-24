@@ -5,7 +5,7 @@ const Product = require("../models/product");
 // Create order from cart
 exports.createOrder = async (req, res) => {
   try {
-    const { shippingAddress, paymentMethod } = req.body;
+    const { shippingAddress, paymentMethod, paymentId, razorpayOrderId } = req.body;
 
     // Get user's cart
     const cart = await Cart.findOne({ user: req.user.id }).populate("items.product");
@@ -39,21 +39,29 @@ exports.createOrder = async (req, res) => {
 
       totalAmount += product.price * item.quantity;
 
-      // Update product stock
+      // Update product stock immediately (payment already verified for Razorpay)
       product.stock -= item.quantity;
       await product.save();
     }
 
-    // Create order
-    const order = await Order.create({
+    // Create order data
+    const orderData = {
       user: req.user.id,
       items: orderItems,
       totalAmount,
       shippingAddress,
-      paymentMethod
-    });
+      paymentMethod,
+      status: paymentMethod === "cod" ? "processing" : "processing", // Both confirmed now
+      paymentStatus: paymentMethod === "cod" ? "cod" : "completed"
+    };
 
-    // Clear cart
+    // Add payment details if provided (for Razorpay)
+    if (paymentId) orderData.paymentId = paymentId;
+    if (razorpayOrderId) orderData.razorpayOrderId = razorpayOrderId;
+
+    const order = await Order.create(orderData);
+
+    // Clear cart for all payment methods
     cart.items = [];
     await cart.save();
 

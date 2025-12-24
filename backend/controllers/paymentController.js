@@ -66,7 +66,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      order_id // Our internal order ID
+      order_id // Our internal order ID (optional - may not exist yet)
     } = req.body;
 
     // Create signature for verification
@@ -84,8 +84,35 @@ exports.verifyRazorpayPayment = async (req, res) => {
       });
     }
 
-    // Update order status in database
+    // If order_id is provided, update the existing order
     if (order_id) {
+      const order = await Order.findById(order_id).populate('items.product');
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      // Update product stock now that payment is verified
+      for (const item of order.items) {
+        const product = await Product.findById(item.product._id);
+        if (product) {
+          product.stock -= item.quantity;
+          await product.save();
+        }
+      }
+
+      // Clear user's cart now that payment is verified
+      const Cart = require('../models/cart');
+      const cart = await Cart.findOne({ user: order.user });
+      if (cart) {
+        cart.items = [];
+        await cart.save();
+      }
+
+      // Update order with payment details and confirm it
       await Order.findByIdAndUpdate(order_id, {
         status: 'processing',
         paymentId: razorpay_payment_id,

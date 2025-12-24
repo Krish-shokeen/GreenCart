@@ -84,7 +84,7 @@ export default function Shop() {
                 className="product-img"
               />
               <h3>{product.name}</h3>
-              <p className="product-price">${product.price}</p>
+              <p className="product-price">₹{product.price}</p>
               <div className="product-tags">
                 {product.tags.map(tag => (
                   <span key={tag} className="tag">{tag}</span>

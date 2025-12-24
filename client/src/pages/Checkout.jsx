@@ -171,7 +171,7 @@ export default function Checkout() {
                   <p className="summary-item-qty">Qty: {item.quantity}</p>
                 </div>
                 <p className="summary-item-price">
-                  ${(item.product?.price * item.quantity).toFixed(2)}
+                  ₹{(item.product?.price * item.quantity).toFixed(2)}
                 </p>
               </div>
             ))}
@@ -180,7 +180,7 @@ export default function Checkout() {
           <div className="summary-totals">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Shipping:</span>
@@ -188,7 +188,7 @@ export default function Checkout() {
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -95,25 +95,13 @@ export default function Payment() {
     setSubmitting(true);
 
     try {
-      // First create the order in our database
-      const orderResponse = await axios.post(
-        `${API_URL}/api/orders`,
-        {
-          shippingAddress,
-          paymentMethod: "razorpay"
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const order = orderResponse.data.order;
-
-      // Create Razorpay order
+      // Create Razorpay order (don't create our order yet)
       const razorpayOrderResponse = await axios.post(
         `${API_URL}/api/payment/create-order`,
         {
           amount: calculateTotal(),
           currency: "INR",
-          receipt: `order_${order._id}`
+          receipt: `temp_${Date.now()}`
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -132,14 +120,13 @@ export default function Payment() {
         order_id: razorpayOrder.id,
         handler: async function (response) {
           try {
-            // Verify payment
+            // First verify payment
             const verifyResponse = await axios.post(
               `${API_URL}/api/payment/verify-payment`,
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                order_id: order._id
+                razorpay_signature: response.razorpay_signature
               },
               {
                 headers: { Authorization: `Bearer ${token}` }
@@ -147,6 +134,19 @@ export default function Payment() {
             );
 
             if (verifyResponse.data.success) {
+              // Only create order AFTER payment verification succeeds
+              const orderResponse = await axios.post(
+                `${API_URL}/api/orders`,
+                {
+                  shippingAddress,
+                  paymentMethod: "razorpay",
+                  paymentId: response.razorpay_payment_id,
+                  razorpayOrderId: response.razorpay_order_id
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+
+              const order = orderResponse.data.order;
               showToast("✅ Payment successful! Order confirmed.", "success");
               navigate(`/orders/${order._id}`, { 
                 state: { 
@@ -315,7 +315,7 @@ export default function Payment() {
                 className="pay-now-btn" 
                 disabled={submitting}
               >
-                {submitting ? "Processing..." : `Pay $${calculateTotal().toFixed(2)}`}
+                {submitting ? "Processing..." : `Pay ₹${calculateTotal().toFixed(2)}`}
               </button>
             </div>
           </form>

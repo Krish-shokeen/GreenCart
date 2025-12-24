@@ -105,7 +105,7 @@ export default function ProductDetail() {
 
         <div className="detail-info">
           <h1>{product.name}</h1>
-          <p className="detail-price">${product.price}</p>
+          <p className="detail-price">₹{product.price}</p>
 
           <div className="tags-row">
             {product.tags.map(tag => (

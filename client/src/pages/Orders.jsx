@@ -90,7 +90,7 @@ export default function Orders() {
               </div>
 
               <div className="order-footer">
-                <p className="order-total">Total: ${order.totalAmount.toFixed(2)}</p>
+                <p className="order-total">Total: ₹{order.totalAmount.toFixed(2)}</p>
                 <p className="order-items-count">{order.items.length} items</p>
               </div>
             </div>

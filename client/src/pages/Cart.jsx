@@ -120,7 +120,7 @@ export default function Cart() {
                 </div>
 
                 <div className="cart-item-total">
-                  <p>${(item.product?.price * item.quantity).toFixed(2)}</p>
+                  <p>₹{(item.product?.price * item.quantity).toFixed(2)}</p>
                 </div>
 
                 <button
@@ -136,11 +136,11 @@ export default function Cart() {
           <div className="cart-summary">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
 
             <button className="checkout-btn" onClick={() => navigate("/checkout")}>
