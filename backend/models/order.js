@@ -17,7 +17,10 @@ const orderSchema = new mongoose.Schema({
     zipCode: { type: String, required: true },
     country: { type: String, required: true }
   },
-  paymentMethod: { type: String, required: true, enum: ["card", "paypal", "cod"] },
+  paymentMethod: { type: String, required: true, enum: ["card", "paypal", "cod", "razorpay"] },
+  paymentStatus: { type: String, default: "pending", enum: ["pending", "completed", "failed", "refunded"] },
+  paymentId: { type: String }, // Razorpay payment ID
+  razorpayOrderId: { type: String }, // Razorpay order ID
   status: { 
     type: String, 
     default: "pending", 

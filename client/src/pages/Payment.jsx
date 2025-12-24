@@ -2,21 +2,20 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import API_URL from "../config/api";
+import { useToast } from "../components/Toast";
 
 export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
+  const showToast = useToast();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const token = localStorage.getItem("token");
 
   const [paymentData, setPaymentData] = useState({
-    paymentMethod: "card",
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: ""
+    paymentMethod: "razorpay"
   });
 
   // Get shipping address from previous page
@@ -29,13 +28,31 @@ export default function Payment() {
     }
 
     if (!shippingAddress) {
-      alert("Please complete shipping information first");
+      showToast("Please complete shipping information first", "warning");
       navigate("/checkout");
       return;
     }
 
     fetchCart();
+    loadRazorpayScript();
   }, []);
+
+  const loadRazorpayScript = () => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => setRazorpayLoaded(true);
+    script.onerror = () => {
+      console.error("Failed to load Razorpay script");
+      showToast("Failed to load payment gateway", "error");
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  };
 
   const fetchCart = async () => {
     try {
@@ -46,7 +63,7 @@ export default function Payment() {
       setLoading(false);
 
       if (!res.data.cart || res.data.cart.items.length === 0) {
-        alert("Your cart is empty");
+        showToast("Your cart is empty", "warning");
         navigate("/cart");
       }
     } catch (err) {
@@ -69,17 +86,112 @@ export default function Payment() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Validate card details if card payment is selected
-    if (paymentData.paymentMethod === "card") {
-      if (!paymentData.cardNumber || !paymentData.cardName || !paymentData.expiryDate || !paymentData.cvv) {
-        alert("Please fill in all card details");
-        return;
-      }
+  const handleRazorpayPayment = async () => {
+    if (!razorpayLoaded) {
+      showToast("Payment gateway is loading. Please wait...", "warning");
+      return;
     }
 
+    setSubmitting(true);
+
+    try {
+      // First create the order in our database
+      const orderResponse = await axios.post(
+        `${API_URL}/api/orders`,
+        {
+          shippingAddress,
+          paymentMethod: "razorpay"
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const order = orderResponse.data.order;
+
+      // Create Razorpay order
+      const razorpayOrderResponse = await axios.post(
+        `${API_URL}/api/payment/create-order`,
+        {
+          amount: calculateTotal(),
+          currency: "INR",
+          receipt: `order_${order._id}`
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      const { order: razorpayOrder, key_id } = razorpayOrderResponse.data;
+
+      // Configure Razorpay options
+      const options = {
+        key: key_id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: "GreenCart",
+        description: "Sustainable Marketplace",
+        order_id: razorpayOrder.id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await axios.post(
+              `${API_URL}/api/payment/verify-payment`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: order._id
+              },
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+
+            if (verifyResponse.data.success) {
+              showToast("✅ Payment successful! Order confirmed.", "success");
+              navigate(`/orders/${order._id}`, { 
+                state: { 
+                  paymentSuccess: true,
+                  paymentId: response.razorpay_payment_id
+                }
+              });
+            } else {
+              throw new Error("Payment verification failed");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            showToast("Payment verification failed. Please contact support.", "error");
+          }
+        },
+        prefill: {
+          name: shippingAddress?.name || JSON.parse(localStorage.getItem("user"))?.name || "",
+          email: JSON.parse(localStorage.getItem("user"))?.email || "",
+          contact: shippingAddress?.phone || ""
+        },
+        notes: {
+          address: `${shippingAddress?.street}, ${shippingAddress?.city}`
+        },
+        theme: {
+          color: "#4caf50"
+        },
+        modal: {
+          ondismiss: function() {
+            setSubmitting(false);
+            showToast("Payment cancelled", "warning");
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error("Payment initiation error:", error);
+      showToast("Failed to initiate payment. Please try again.", "error");
+      setSubmitting(false);
+    }
+  };
+
+  const handleCODPayment = async () => {
     setSubmitting(true);
 
     try {
@@ -87,16 +199,26 @@ export default function Payment() {
         `${API_URL}/api/orders`,
         {
           shippingAddress,
-          paymentMethod: paymentData.paymentMethod
+          paymentMethod: "cod"
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Payment successful! Order placed.");
+      showToast("✅ Order placed successfully! Pay on delivery.", "success");
       navigate(`/orders/${res.data.order._id}`);
     } catch (err) {
-      alert(err.response?.data?.message || "Payment failed");
+      showToast(err.response?.data?.message || "Failed to place order", "error");
       setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (paymentData.paymentMethod === "razorpay") {
+      handleRazorpayPayment();
+    } else if (paymentData.paymentMethod === "cod") {
+      handleCODPayment();
     }
   };
 
@@ -112,31 +234,20 @@ export default function Payment() {
             <div className="form-group">
               <label>Payment Method</label>
               <div className="payment-methods">
-                <label className={`payment-method-option ${paymentData.paymentMethod === "card" ? "active" : ""}`}>
+                <label className={`payment-method-option ${paymentData.paymentMethod === "razorpay" ? "active" : ""}`}>
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="card"
-                    checked={paymentData.paymentMethod === "card"}
+                    value="razorpay"
+                    checked={paymentData.paymentMethod === "razorpay"}
                     onChange={handleChange}
                   />
                   <div className="payment-method-content">
                     <span className="payment-icon">💳</span>
-                    <span>Credit/Debit Card</span>
-                  </div>
-                </label>
-
-                <label className={`payment-method-option ${paymentData.paymentMethod === "paypal" ? "active" : ""}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="paypal"
-                    checked={paymentData.paymentMethod === "paypal"}
-                    onChange={handleChange}
-                  />
-                  <div className="payment-method-content">
-                    <span className="payment-icon">💰</span>
-                    <span>PayPal</span>
+                    <div>
+                      <span>Online Payment</span>
+                      <small>Card, UPI, Net Banking, Wallet</small>
+                    </div>
                   </div>
                 </label>
 
@@ -150,75 +261,44 @@ export default function Payment() {
                   />
                   <div className="payment-method-content">
                     <span className="payment-icon">💵</span>
-                    <span>Cash on Delivery</span>
+                    <div>
+                      <span>Cash on Delivery</span>
+                      <small>Pay when delivered</small>
+                    </div>
                   </div>
                 </label>
               </div>
             </div>
 
-            {paymentData.paymentMethod === "card" && (
-              <div className="card-details">
-                <h3>Card Details</h3>
-                <div className="form-group">
-                  <label>Card Number</label>
-                  <input
-                    type="text"
-                    name="cardNumber"
-                    value={paymentData.cardNumber}
-                    onChange={handleChange}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength="19"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Cardholder Name</label>
-                  <input
-                    type="text"
-                    name="cardName"
-                    value={paymentData.cardName}
-                    onChange={handleChange}
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Expiry Date</label>
-                    <input
-                      type="text"
-                      name="expiryDate"
-                      value={paymentData.expiryDate}
-                      onChange={handleChange}
-                      placeholder="MM/YY"
-                      maxLength="5"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>CVV</label>
-                    <input
-                      type="text"
-                      name="cvv"
-                      value={paymentData.cvv}
-                      onChange={handleChange}
-                      placeholder="123"
-                      maxLength="3"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentData.paymentMethod === "paypal" && (
+            {paymentData.paymentMethod === "razorpay" && (
               <div className="payment-info">
-                <p>You will be redirected to PayPal to complete your payment.</p>
+                <div className="razorpay-info">
+                  <h3>🔒 Secure Online Payment</h3>
+                  <p>Pay securely using:</p>
+                  <div className="payment-options-list">
+                    <span>💳 Credit/Debit Cards</span>
+                    <span>📱 UPI (GPay, PhonePe, Paytm)</span>
+                    <span>🏦 Net Banking</span>
+                    <span>💰 Digital Wallets</span>
+                  </div>
+                  <p className="security-note">
+                    <span>🛡️</span> Powered by Razorpay - India's most trusted payment gateway
+                  </p>
+                </div>
               </div>
             )}
 
             {paymentData.paymentMethod === "cod" && (
               <div className="payment-info">
-                <p>Pay with cash when your order is delivered.</p>
+                <div className="cod-info">
+                  <h3>💰 Cash on Delivery</h3>
+                  <p>Pay with cash when your order is delivered to your doorstep.</p>
+                  <ul>
+                    <li>✅ No advance payment required</li>
+                    <li>✅ Pay only after receiving your order</li>
+                    <li>✅ Available for orders above ₹500</li>
+                  </ul>
+                </div>
               </div>
             )}
 
@@ -263,7 +343,7 @@ export default function Payment() {
                   <p className="summary-item-qty">Qty: {item.quantity}</p>
                 </div>
                 <p className="summary-item-price">
-                  ${(item.product?.price * item.quantity).toFixed(2)}
+                  ₹{(item.product?.price * item.quantity).toFixed(2)}
                 </p>
               </div>
             ))}
@@ -272,7 +352,7 @@ export default function Payment() {
           <div className="summary-totals">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Shipping:</span>
@@ -280,7 +360,7 @@ export default function Payment() {
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${calculateTotal().toFixed(2)}</span>
+              <span>₹{calculateTotal().toFixed(2)}</span>
             </div>
           </div>
         </div>
