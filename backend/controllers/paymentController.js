@@ -2,15 +2,29 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/order');
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize Razorpay only if credentials are available
+let razorpay = null;
+
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+  console.log('Razorpay initialized successfully');
+} else {
+  console.error('Razorpay credentials not found in environment variables');
+}
 
 // Create Razorpay Order
 exports.createRazorpayOrder = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(500).json({
+        success: false,
+        message: 'Payment gateway not configured properly'
+      });
+    }
+
     const { amount, currency = 'INR', receipt } = req.body;
 
     // Validate amount
@@ -100,6 +114,13 @@ exports.verifyRazorpayPayment = async (req, res) => {
 // Get Payment Details
 exports.getPaymentDetails = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(500).json({
+        success: false,
+        message: 'Payment gateway not configured properly'
+      });
+    }
+
     const { payment_id } = req.params;
 
     const payment = await razorpay.payments.fetch(payment_id);
@@ -122,6 +143,13 @@ exports.getPaymentDetails = async (req, res) => {
 // Refund Payment
 exports.refundPayment = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(500).json({
+        success: false,
+        message: 'Payment gateway not configured properly'
+      });
+    }
+
     const { payment_id } = req.params;
     const { amount, reason = 'requested_by_customer' } = req.body;
 
