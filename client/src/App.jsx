@@ -32,8 +32,10 @@ import VerifyOTP from "./pages/VerifyOTP";
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const dropdownRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem("token"));
@@ -45,6 +47,9 @@ export default function App() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setShowMobileMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -53,6 +58,8 @@ export default function App() {
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
+    setShowDropdown(false);
+    setShowMobileMenu(false);
     window.location.href = "/";
   };
 
@@ -64,7 +71,21 @@ export default function App() {
         <nav className="navbar slide-down">
           <h1 className="logo">🌿 GreenCart</h1>
 
-          <div className="nav-links">
+          {/* Mobile Menu Button */}
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            aria-label="Toggle mobile menu"
+          >
+            <span className={`hamburger ${showMobileMenu ? 'active' : ''}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+
+          {/* Desktop Navigation */}
+          <div className="nav-links desktop-nav">
             <NavLink to="/" end className="nav-btn">Home</NavLink>
             <NavLink to="/shop" className="nav-btn">Shop</NavLink>
             <NavLink to="/about" className="nav-btn">About</NavLink>
@@ -103,6 +124,59 @@ export default function App() {
                 <button className="login-btn">Login</button>
               </NavLink>
             )}
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className={`mobile-nav ${showMobileMenu ? 'active' : ''}`} ref={mobileMenuRef}>
+            <div className="mobile-nav-content">
+              <NavLink to="/" end className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                🏠 Home
+              </NavLink>
+              <NavLink to="/shop" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                🛍️ Shop
+              </NavLink>
+              <NavLink to="/about" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                ℹ️ About
+              </NavLink>
+              <NavLink to="/contact" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                📞 Contact
+              </NavLink>
+              
+              {isLoggedIn && (
+                <>
+                  <NavLink to="/cart" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                    🛒 Cart
+                  </NavLink>
+                  <NavLink to="/dashboard" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                    👤 Dashboard
+                  </NavLink>
+                  <NavLink to="/orders" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                    📦 My Orders
+                  </NavLink>
+                  
+                  {JSON.parse(localStorage.getItem("user"))?.role === "seller" && (
+                    <>
+                      <NavLink to="/my-products" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                        📋 My Products
+                      </NavLink>
+                      <NavLink to="/add-product" className="mobile-nav-link" onClick={() => setShowMobileMenu(false)}>
+                        ➕ Add Product
+                      </NavLink>
+                    </>
+                  )}
+                  
+                  <button className="mobile-nav-link logout-btn" onClick={handleLogout}>
+                    🚪 Logout
+                  </button>
+                </>
+              )}
+              
+              {!isLoggedIn && (
+                <NavLink to="/login" className="mobile-nav-link login-link" onClick={() => setShowMobileMenu(false)}>
+                  🔑 Login
+                </NavLink>
+              )}
+            </div>
           </div>
         </nav>
 

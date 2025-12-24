@@ -20,7 +20,6 @@ exports.signup = async (req, res) => {
     if (existingTempUser) {
       // Delete old temp user and create new one (allows re-signup)
       await TempUser.deleteOne({ email });
-      console.log(`Deleted old pending verification for ${email}`);
     }
 
     // Hash password
@@ -41,7 +40,6 @@ exports.signup = async (req, res) => {
     // Send OTP email
     try {
       await sendOTPEmail(email, otp, name);
-      console.log(`OTP sent successfully to ${email}`);
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
       // Clean up temp user if email fails
@@ -234,7 +232,6 @@ exports.resendOTP = async (req, res) => {
     // Send OTP email
     try {
       await sendOTPEmail(email, otp, tempUser.name);
-      console.log(`OTP resent successfully to ${email}`);
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
       return res.status(500).json({ message: "Failed to send OTP email" });

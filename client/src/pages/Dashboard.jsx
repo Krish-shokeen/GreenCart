@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_URL from "../config/api";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const savedUser = JSON.parse(localStorage.getItem("user")) || {};
 
   const [name, setName] = useState(savedUser.name || "");
@@ -70,7 +72,10 @@ export default function Dashboard() {
       
       setSaving(false);
       setMessage("Profile updated successfully!");
-      setTimeout(() => setMessage(""), 3000);
+      setTimeout(() => {
+        setMessage("");
+        navigate("/"); // Redirect to home page
+      }, 2000);
     } catch (err) {
       setSaving(false);
       alert("Failed to update profile");

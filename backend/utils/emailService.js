@@ -8,12 +8,6 @@ const generateOTP = () => {
 // Send OTP Email
 const sendOTPEmail = async (email, otp, name) => {
   try {
-    console.log('=== Email Service Debug ===');
-    console.log('EMAIL_USER:', process.env.EMAIL_USER);
-    console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
-    console.log('Sending to:', email);
-    console.log('OTP:', otp);
-
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       throw new Error('Email credentials not configured');
     }
@@ -117,20 +111,155 @@ const sendOTPEmail = async (email, otp, name) => {
     console.log('Attempting to send email...');
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent successfully!');
-    console.log('Message ID:', info.messageId);
-    console.log('Response:', info.response);
     return true;
   } catch (error) {
-    console.error('❌ Error sending OTP email:');
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Full error:', error);
+    console.error('❌ Error sending OTP email:', error.message);
     throw new Error(`Failed to send OTP email: ${error.message}`);
+  }
+};
+
+// Send Contact Form Email
+const sendContactEmail = async (contactData) => {
+  try {
+    const { name, email, subject, message, messageId, timestamp } = contactData;
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Email credentials not configured');
+    }
+
+    // Create transporter
+    const transporter = nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: `GreenCart Contact <${process.env.EMAIL_USER}>`,
+      to: 'krishshokeen55@gmail.com', // Your email to receive contact messages
+      subject: `🌿 New Contact Form: ${subject}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 10px 10px 0 0;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border: 1px solid #ddd;
+              border-radius: 0 0 10px 10px;
+            }
+            .info-row {
+              display: flex;
+              margin-bottom: 15px;
+              padding: 10px;
+              background: #f8f9fa;
+              border-radius: 5px;
+            }
+            .info-label {
+              font-weight: bold;
+              min-width: 100px;
+              color: #2d6a4f;
+            }
+            .message-box {
+              background: #e8f5e9;
+              padding: 20px;
+              border-left: 4px solid #2d6a4f;
+              margin: 20px 0;
+              border-radius: 5px;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 20px;
+              color: #666;
+              font-size: 12px;
+            }
+            .reply-btn {
+              display: inline-block;
+              background: #2d6a4f;
+              color: white;
+              padding: 10px 20px;
+              text-decoration: none;
+              border-radius: 5px;
+              margin-top: 15px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🌿 GreenCart Contact Form</h1>
+            <p>New message received</p>
+          </div>
+          <div class="content">
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span>${name}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span>${email}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Subject:</span>
+              <span>${subject}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Date:</span>
+              <span>${new Date(timestamp).toLocaleString()}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Message ID:</span>
+              <span>${messageId}</span>
+            </div>
+            
+            <div class="message-box">
+              <h3>Message:</h3>
+              <p>${message.replace(/\n/g, '<br>')}</p>
+            </div>
+            
+            <a href="mailto:${email}?subject=Re: ${subject}" class="reply-btn">
+              Reply to ${name}
+            </a>
+            
+            <div class="footer">
+              <p>© 2025 GreenCart | Contact Form Notification</p>
+              <p>This email was automatically generated from your website contact form.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    console.log('Attempting to send contact email...');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Contact email sent successfully!');
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending contact email:', error.message);
+    throw new Error(`Failed to send contact email: ${error.message}`);
   }
 };
 
 module.exports = {
   generateOTP,
-  sendOTPEmail
+  sendOTPEmail,
+  sendContactEmail
 };

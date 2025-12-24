@@ -84,9 +84,9 @@ export default function VerifyOTP() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Redirect to dashboard
+      // Redirect to home
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
         window.location.reload(); // Refresh to update login state
       }, 1000);
 
