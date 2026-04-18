@@ -258,8 +258,67 @@ const sendContactEmail = async (contactData) => {
   }
 };
 
+// Send Password Reset Email
+const sendPasswordResetEmail = async (email, resetToken, name) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Email credentials not configured');
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    const mailOptions = {
+      from: `GreenCart <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Reset Your Password - GreenCart',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4fff6; }
+            .header { background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; }
+            .reset-btn { display: inline-block; background: #2e7d32; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header"><h1>🌿 GreenCart</h1><p>Password Reset Request</p></div>
+            <div class="content">
+              <h2>Hello ${name}!</h2>
+              <p>We received a request to reset your password. Click the button below to set a new password:</p>
+              <div style="text-align:center">
+                <a href="${resetUrl}" class="reset-btn">Reset Password</a>
+              </div>
+              <p style="color:#666;font-size:14px">This link will expire in <strong>1 hour</strong>.</p>
+              <p style="color:#666;font-size:14px">If you didn't request a password reset, you can safely ignore this email.</p>
+              <div class="footer"><p>© 2025 GreenCart | Sustainable Marketplace</p></div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending reset email:', error.message);
+    throw new Error(`Failed to send reset email: ${error.message}`);
+  }
+};
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
-  sendContactEmail
+  sendContactEmail,
+  sendPasswordResetEmail
 };

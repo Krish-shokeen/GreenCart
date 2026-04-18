@@ -1,5 +1,5 @@
 const express = require("express");
-const { signup, login, updateProfile, verifyOTP, resendOTP, checkEmail, getUserProfile } = require("../controllers/authController");
+const { signup, login, updateProfile, verifyOTP, resendOTP, checkEmail, getUserProfile, googleAuth, forgotPassword, resetPassword, changePassword, getPasswordStatus } = require("../controllers/authController");
 
 const router = express.Router();
 const upload = require("../multer");
@@ -49,8 +49,13 @@ router.get("/check-email", checkEmail);
 router.get("/user/:userId", getUserProfile);
 router.post("/signup", signup);
 router.post("/login", login);
+router.post("/google", googleAuth);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOTP);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
+router.put("/change-password", authMiddleware, changePassword);
+router.get("/password-status", authMiddleware, getPasswordStatus);
 router.put("/update-profile", authMiddleware, updateProfile);
 
 module.exports = router;

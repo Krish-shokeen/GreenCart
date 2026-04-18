@@ -2,9 +2,88 @@ const User = require("../models/user");
 const TempUser = require("../models/tempUser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { generateOTP, sendOTPEmail } = require("../utils/emailService");
+const crypto = require("crypto");
+const { generateOTP, sendOTPEmail, sendPasswordResetEmail } = require("../utils/emailService");
 
-// -------- Signup --------
+// -------- Google OAuth --------
+exports.googleAuth = async (req, res) => {
+  try {
+    const { googleId, email, name, profilePic, role, phone, location, address, bio } = req.body;
+
+    if (!googleId || !email) {
+      return res.status(400).json({ message: "Invalid Google credentials" });
+    }
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+    let isNewUser = false;
+
+    if (user) {
+      // Existing user - link Google if not already linked
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = "google";
+        user.isEmailVerified = true;
+        if (profilePic && user.profilePic === "https://cdn-icons-png.flaticon.com/512/3135/3135715.png") {
+          user.profilePic = profilePic;
+        }
+        await user.save();
+      }
+    } else {
+      // New user - role must be provided
+      if (!role) {
+        return res.status(200).json({ isNewUser: true, message: "Role selection required" });
+      }
+      isNewUser = true;
+      user = await User.create({
+        name: name || "User",
+        email,
+        googleId,
+        authProvider: "google",
+        profilePic: profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        role,
+        phone: phone || "",
+        location: location || "",
+        address: address || "",
+        bio: bio || "",
+        isEmailVerified: true,
+        password: null
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).json({
+      message: isNewUser ? "Account created successfully" : "Google login successful",
+      isNewUser,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic,
+        bio: user.bio,
+        location: user.location,
+        address: user.address,
+        phone: user.phone,
+        rating: user.rating,
+        totalRatings: user.totalRatings,
+        totalSales: user.totalSales,
+        memberSince: user.memberSince,
+        isEmailVerified: true
+      }
+    });
+  } catch (err) {
+    console.error("Google auth error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -304,6 +383,100 @@ exports.getUserProfile = async (req, res) => {
     return res.status(200).json({ user });
   } catch (err) {
     console.error("Get user profile error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// -------- Check if user has password set --------
+exports.getPasswordStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("password authProvider");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({ hasPassword: !!user.password });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists or not
+      return res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    // Generate secure token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    await sendPasswordResetEmail(email, resetToken, user.name);
+
+    return res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// -------- Reset Password (via email link) --------
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset link." });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.status(200).json({ message: "Password reset successfully. You can now log in." });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// -------- Change / Set Password (from dashboard) --------
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // If user has a password, verify current one
+    if (user.password) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required" });
+      }
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return res.status(200).json({ message: user.password ? "Password changed successfully" : "Password set successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };

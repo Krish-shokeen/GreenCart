@@ -28,10 +28,10 @@ import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Toast from "./components/Toast";
 import VerifyOTP from "./pages/VerifyOTP";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
+import PrivacyPolicy from "./pages/PolicyPrivacy";
 import TermsConditions from "./pages/TermsConditions";
-import ShippingPolicy from "./pages/ShippingPolicy";
-import RefundPolicy from "./pages/RefundPolicy";
+import ShippingPolicy from "./pages/PolicyShipping";
+import RefundPolicy from "./pages/PolicyRefund";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
