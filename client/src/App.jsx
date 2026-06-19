@@ -51,7 +51,7 @@ export default function App() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !e.target.closest('.mobile-menu-btn')) {
         setShowMobileMenu(false);
       }
     };
