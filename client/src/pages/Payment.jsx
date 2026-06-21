@@ -99,7 +99,7 @@ export default function Payment() {
       const razorpayOrderResponse = await axios.post(
         `${API_URL}/api/payment/create-order`,
         {
-          amount: calculateTotal(),
+          amount: Math.round(calculateTotal() * 100), // Convert to paise
           currency: "INR",
           receipt: `temp_${Date.now()}`
         },
@@ -108,16 +108,20 @@ export default function Payment() {
         }
       );
 
-      const { order: razorpayOrder, key_id } = razorpayOrderResponse.data;
+      const data = razorpayOrderResponse.data;
+      const orderId = data.order_id || data.order?.id;
+      const amount = data.amount || data.order?.amount;
+      const currency = data.currency || data.order?.currency;
+      const keyId = data.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
 
       // Configure Razorpay options
       const options = {
-        key: key_id,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
+        key: keyId,
+        amount: amount,
+        currency: currency,
         name: "GreenCart",
         description: "Sustainable Marketplace",
-        order_id: razorpayOrder.id,
+        order_id: orderId,
         handler: async function (response) {
           try {
             // First verify payment
@@ -160,6 +164,7 @@ export default function Payment() {
           } catch (error) {
             console.error("Payment verification error:", error);
             showToast("Payment verification failed. Please contact support.", "error");
+            setSubmitting(false);
           }
         },
         prefill: {
@@ -182,11 +187,19 @@ export default function Payment() {
       };
 
       const rzp = new window.Razorpay(options);
+      
+      // Handle payment failure event
+      rzp.on('payment.failed', function (response) {
+        console.error("Razorpay payment failed:", response.error);
+        showToast(response.error.description || "Payment failed. Please try again.", "error");
+        setSubmitting(false);
+      });
+
       rzp.open();
 
     } catch (error) {
       console.error("Payment initiation error:", error);
-      showToast("Failed to initiate payment. Please try again.", "error");
+      showToast(error.response?.data?.message || "Failed to initiate payment. Please try again.", "error");
       setSubmitting(false);
     }
   };

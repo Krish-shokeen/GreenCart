@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/order');
+const Product = require('../models/product');
 
 // Initialize Razorpay only if credentials are available
 let razorpay = null;
@@ -27,15 +28,16 @@ exports.createRazorpayOrder = async (req, res) => {
 
     const { amount, currency = 'INR', receipt } = req.body;
 
-    // Validate amount
-    if (!amount || amount < 1) {
+    // Validate amount (must be at least 100 paise)
+    if (!amount || amount < 100) {
       return res.status(400).json({ 
-        message: "Invalid amount. Amount should be at least ₹1" 
+        success: false,
+        message: "Invalid amount. Minimum amount is 100 paise (₹1)" 
       });
     }
 
     const options = {
-      amount: Math.round(amount * 100), // Convert to paise
+      amount: Math.round(amount), // Amount is already in paise
       currency,
       receipt: receipt || `order_${Date.now()}`,
       payment_capture: 1, // Auto capture payment
@@ -45,7 +47,10 @@ exports.createRazorpayOrder = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      order: razorpayOrder,
+      order_id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      order: razorpayOrder, // Fallback support
       key_id: process.env.RAZORPAY_KEY_ID,
     });
 
@@ -68,6 +73,14 @@ exports.verifyRazorpayPayment = async (req, res) => {
       razorpay_signature,
       order_id // Our internal order ID (optional - may not exist yet)
     } = req.body;
+
+    // Validate missing fields
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required payment verification fields'
+      });
+    }
 
     // Create signature for verification
     const body = razorpay_order_id + "|" + razorpay_payment_id;

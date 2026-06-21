@@ -54,6 +54,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
+app.use("/api", require("./routes/paymentRoutes")); // Supports direct /api/create-order and /api/verify-payment
 
 const MONGO_URL = process.env.MONGO_URL;
 
